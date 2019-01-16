@@ -49,6 +49,21 @@ func (s *SMTP) Ping() error {
 	return <-ch
 }
 
+// Validate : 設定項目の整合性チェック
+func (s *SMTP) Validate() error {
+	// Address, Port で設定されたサーバが疎通できるか確認
+	if err := s.Ping(); err != nil {
+		return err
+	}
+	// 認証が有効の状態の場合、ユーザ名とパスワードは設定されているか確認
+	if s.Auth == PlainAuth {
+		if s.Username == "" || s.Password == "" {
+			return fmt.Errorf("user or password is not setting")
+		}
+	}
+	return nil
+}
+
 // TLS認証のメールを送信
 func (s *SMTP) sendTLSSubmission(m *Mail) error {
 	// SMTPサーバに接続開始
