@@ -33,6 +33,22 @@ type SMTP struct {
 	Auth     string // 認証機構。現状 plain のみ
 }
 
+// Ping : メールサーバとの疎通確認
+func (s *SMTP) Ping() error {
+	var ch = make(chan error)
+	// Dial を用いて疎通確認する
+	go func() {
+		_, err := smtp.Dial(fmt.Sprintf("%s:%d", s.Address, s.Port))
+		ch <- err
+	}()
+	// 指定時間内に処理結果が得られない場合、エラーを返却する
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		ch <- fmt.Errorf("'%s:%d' connection refused. timeout error", s.Address, s.Port)
+	}()
+	return <-ch
+}
+
 // TLS認証のメールを送信
 func (s *SMTP) sendTLSSubmission(m *Mail) error {
 	// SMTPサーバに接続開始
