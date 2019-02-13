@@ -34,7 +34,7 @@ type SMTP struct {
 }
 
 // Ping : メールサーバとの疎通確認
-func (s *SMTP) Ping() error {
+func (s *SMTP) Ping(timeout int) error {
 	var ch = make(chan error)
 	// Dial を用いて疎通確認する
 	go func() {
@@ -43,16 +43,16 @@ func (s *SMTP) Ping() error {
 	}()
 	// 指定時間内に処理結果が得られない場合、エラーを返却する
 	go func() {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(time.Duration(timeout) * time.Millisecond)
 		ch <- fmt.Errorf("'%s:%d' connection refused. timeout error", s.Address, s.Port)
 	}()
 	return <-ch
 }
 
 // Validate : 設定項目の整合性チェック
-func (s *SMTP) Validate() error {
+func (s *SMTP) Validate(timeout int) error {
 	// Address, Port で設定されたサーバが疎通できるか確認
-	if err := s.Ping(); err != nil {
+	if err := s.Ping(timeout); err != nil {
 		return err
 	}
 	// 認証が有効の状態の場合、ユーザ名とパスワードは設定されているか確認
