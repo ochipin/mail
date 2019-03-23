@@ -217,7 +217,7 @@ func (s *SMTP) Send(m *Mail) error {
 		return fmt.Errorf("not mail object")
 	}
 	// 認証を必要としない場合、25ポートのメールとして送信
-	if s.Auth != PlainAuth {
+	if s.Auth == PlainAuth {
 		return s.sendSMTP(m)
 	}
 	// 認証を必要する場合でかつ、TLS認証の場合
@@ -342,7 +342,11 @@ func (m *Mail) Header() (string, error) {
 	}
 
 	// 件名をヘッダへ追加
-	header += m.subjectEncode()
+	if m.Subject == "" {
+		m.Subject = "Subject: \r\n"
+	} else {
+		header += m.subjectEncode()
+	}
 
 	// 本文を追加
 	if m.attach != "" {
